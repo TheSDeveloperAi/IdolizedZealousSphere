@@ -273,7 +273,7 @@ def add_products_by_code(customer, seller, commission_rate):
 # Function to search for sellers or customers by name
 def search_by_name(name, entity_type="customer"):
     entity_dict = customer_dict if entity_type == "customer" else seller_dict
-    results = [entity for entity in entity_dict.va islues() if name.lower() in entity.name.lower()]
+    results = [entity for entity in entity_dict.values() if name.lower() in entity.name.lower()]
     return results
 
 # Function to search for sellers or customers by address
