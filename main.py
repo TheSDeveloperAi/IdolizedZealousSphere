@@ -2,8 +2,8 @@ from datetime import datetime
 from dataclasses import dataclass
 
 
-#test9
-variable = 9
+#test10
+variable = 10
 
 #test3
 # Locations and their respective price factors
