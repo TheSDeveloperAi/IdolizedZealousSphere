@@ -1,11 +1,6 @@
 from datetime import datetime
 from dataclasses import dataclass
 
-
-#test11
-variable = 11
-
-#test3
 # Locations and their respective price factors
 locations = ["goiania", "pernambuco", "bahia"]
 price_factors = {
