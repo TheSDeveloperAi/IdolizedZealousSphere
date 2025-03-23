@@ -42,9 +42,19 @@ populate_price_tables()
 
 # Function to get the price based on the table, product attributes, and location
 def get_price(table, product, location):
-    return price_tables.get(table, {}).get(
-        (product.category, product.finish, product.color, product.weight, location), None
-    )
+    """Get price for a product based on table, product attributes, and location.
+    
+    Args:
+        table (str): Price table identifier ('711' or '411')
+        product (Product): Product object containing category, finish, color, and weight
+        location (str): Location identifier
+        
+    Returns:
+        float or None: Price if found, None if not found
+    """
+    product_key = (product.category, product.finish, product.color, product.weight, location)
+    table_prices = price_tables.get(table, {})
+    return table_prices.get(product_key, None)
 
 # Tax rates based on location
 tax_rates = {
