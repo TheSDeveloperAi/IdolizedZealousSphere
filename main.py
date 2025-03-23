@@ -4,9 +4,9 @@ from dataclasses import dataclass
 # Locations and their respective price factors
 locations = ["goiania", "pernambuco", "bahia"]
 price_factors = {
-    "goiania": 1.0,
-    "pernambuco": 1.5,
-    "bahia": 2.0
+    "goiania": 4.0,
+    "pernambuco": 4.5,
+    "bahia": 5.0
 }
 
 # Base prices
@@ -22,17 +22,23 @@ price_tables = {
     "411": {}
 }
 
-# Populate price tables
-for table in price_tables:
-    for category in ["Acrilico premium"]:
-        for finish in ["fosco", "semibrilho"]:
-            for color in ["black", "white", "green"]:
-                for weight in [500, 1000, 2000]:
-                    for location in locations:
-                        base_price = base_prices[weight]
-                        location_factor = price_factors[location]
-                        price = base_price * location_factor
-                        price_tables[table][(category, finish, color, weight, location)] = price
+def calculate_price(weight, location):
+    """Calculate price based on weight and location."""
+    return base_prices[weight] * price_factors[location]
+
+def populate_price_tables():
+    """Populate the price_tables with computed prices."""
+    for table in price_tables:
+        for category in ["Acrilico premium"]:
+            for finish in ["fosco", "semibrilho"]:
+                for color in ["black", "white", "green"]:
+                    for weight in base_prices:
+                        for location in locations:
+                            price = calculate_price(weight, location)
+                            price_tables[table][(category, finish, color, weight, location)] = price
+
+# Initialize price tables
+populate_price_tables()
 
 # Function to get the price based on the table, product attributes, and location
 def get_price(table, product, location):
