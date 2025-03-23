@@ -229,7 +229,7 @@ def add_products_by_code(customer, seller, commission_rate):
                                 print("Invalid input. Please enter a valid numeric quantity.")
                         while True:
                             try:
-                                discount = float(input("Enter the discount for this product: "))
+                                discount = float(input("Enter the discount for this product (0-100): "))
                                 if 0 <= discount <= 100:
                                     break
                                 else:
@@ -266,7 +266,7 @@ def add_products_by_code(customer, seller, commission_rate):
     print(f"Total weight for all added products: {total_weight} ml")
     print(f"Total flammable weight: {flammable_weight} ml")
     print(f"Total non-flammable weight: {non_flammable_weight} ml")
-    
+
     # Calculate the commission for the seller
     commission = seller.calculate_commission(total_price, commission_rate)
     print(f"Commission for the seller at {commission_rate}% is: ${commission:.2f}")
@@ -293,6 +293,7 @@ def main_program():
     # Track products in the customer's list
     global customer_product_list
     customer_product_list = {}
+    global table # Declare table as global
 
     # Get current date and time
     current_datetime = datetime.now()
