@@ -443,4 +443,13 @@ def main_program():
     add_products_by_code(customer, seller, commission_rate)
 
 if __name__ == "__main__":
-    main_program()
+    while True:
+        print("\nWelcome to the Sales System!")
+        choice = input("Enter 'start' to begin a new order or 'exit' to quit: ").lower()
+        if choice == 'exit':
+            print("Thank you for using the Sales System. Goodbye!")
+            break
+        elif choice == 'start':
+            main_program()
+        else:
+            print("Invalid choice. Please enter 'start' or 'exit'.")
