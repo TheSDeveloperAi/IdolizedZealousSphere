@@ -42,19 +42,9 @@ populate_price_tables()
 
 # Function to get the price based on the table, product attributes, and location
 def get_price(table, product, location):
-    """Get price for a product based on table, product attributes, and location.
-    
-    Args:
-        table (str): Price table identifier ('711' or '411')
-        product (Product): Product object containing category, finish, color, and weight
-        location (str): Location identifier
-        
-    Returns:
-        float or None: Price if found, None if not found
-    """
-    product_key = (product.category, product.finish, product.color, product.weight, location)
-    table_prices = price_tables.get(table, {})
-    return table_prices.get(product_key, None)
+    return price_tables.get(table, {}).get(
+        (product.category, product.finish, product.color, product.weight, location), None
+    )
 
 # Tax rates based on location
 tax_rates = {
@@ -63,35 +53,17 @@ tax_rates = {
     "bahia": 0.12     # 12% tax
 }
 
+@dataclass
 class Customer:
-    def __init__(self, customer_id: int, name: str, address: str, email: str, phone: str, seller_id: int, block: bool = False):
-        self.customer_id = customer_id
-        self.name = name
-        self.address = address
-        self.email = email
-        self.phone = phone
-        self.seller_id = seller_id
-        self.block = block
-        self._order_history = []
+    customer_id: int
+    name: str
+    address: str
+    email: str
+    phone: str
+    seller_id: int
+    block: bool = False  # New attribute with a default value
 
-    def __str__(self) -> str:
-        return f"Customer(customer_id='{self.customer_id}', name='{self.name}', address='{self.address}', email='{self.email}', phone='{self.phone}', seller_id='{self.seller_id}', block={self.block})"
-
-    def is_blocked(self) -> bool:
-        """Check if customer is blocked."""
-        return self.block
-
-    def get_location(self) -> str:
-        """Get customer's location for pricing."""
-        return self.address
-
-    def add_to_order_history(self, order_details: dict) -> None:
-        """Add an order to customer's history."""
-        self._order_history.append({
-            'date': datetime.now(),
-            **order_details
-        })
-
+@dataclass
 class Product:
     category: str
     finish: str
@@ -100,30 +72,11 @@ class Product:
     code: str
     flammable: bool = False
 
-class Seller(Customer):
-    def __init__(self, customer_id: int, name: str, address: str, email: str, phone: str, block: bool = False):
-        super().__init__(customer_id, name, address, email, phone, None, block)
-        self._total_commission = 0.0
-        self._sales_history = []
-
+# Create the Seller class inheriting from Customer
+@dataclass
+class Seller(Customer):  # Inheriting from Customer
     def calculate_commission(self, total_price: float, commission_rate: float) -> float:
-        """Calculate commission for a sale."""
-        commission = (commission_rate / 100) * total_price
-        self._total_commission += commission
-        return commission
-
-    def record_sale(self, customer_id: int, total_price: float, commission: float) -> None:
-        """Record a sale in seller's history."""
-        self._sales_history.append({
-            'date': datetime.now(),
-            'customer_id': customer_id,
-            'total_price': total_price,
-            'commission': commission
-        })
-
-    def get_total_commission(self) -> float:
-        """Get total commission earned."""
-        return self._total_commission
+        return (commission_rate / 100) * total_price
 
 # Factory function to create a Customer object
 def create_customer(customer_id, name, address, email, phone, seller_id, block=False):
