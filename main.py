@@ -17,10 +17,7 @@ base_prices = {
 }
 
 # Price tables
-price_tables = {
-    "711": {},
-    "411": {}
-}
+price_tables = {"711": {}, "411": {}}
 
 def calculate_price(weight, location):
     """Calculate price based on weight and location."""
