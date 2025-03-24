@@ -1,5 +1,5 @@
 from datetime import datetime
-from dataclasses import dataclassz
+from dataclasses import dataclass
 
 # Locations and their respective price factors
 locations = ["goiania", "pernambuco", "bahia"]
