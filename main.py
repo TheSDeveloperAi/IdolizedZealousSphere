@@ -126,26 +126,18 @@ class Seller(Customer):
         """Get total commission earned."""
         return self._total_commission
 
-# Factory function to create a Customer object
-def create_customer(customer_id, name, address, email, phone, seller_id, block=False):
-    return Customer(customer_id, name, address, email, phone, seller_id, block)
-
-# Factory function to create a Seller object
-def create_seller(customer_id, name, address, email, phone, block=False):
-    return Seller(customer_id, name, address, email, phone, block)
-
-# List of customers using the factory function
+# List of customers
 customers = [
-    create_customer(1, "Alice", "goiania", "alice@example.com", "123-456-7890", 4, False),
-    create_customer(2, "Bob", "pernambuco", "bob@example.com", "234-567-8901", 5, True),  # Blocked customer
-    create_customer(3, "Carol", "bahia", "carol@example.com", "345-678-9012", 6, False)
+    Customer(1, "Alice", "goiania", "alice@example.com", "123-456-7890", 4, False),
+    Customer(2, "Bob", "pernambuco", "bob@example.com", "234-567-8901", 5, True),  # Blocked customer
+    Customer(3, "Carol", "bahia", "carol@example.com", "345-678-9012", 6, False)
 ]
 
-# List of sellers using the factory function
+# List of sellers
 sellers = [
-    create_seller(4, "Dave", "goiania", "dave@example.com", "456-789-0123", False),
-    create_seller(5, "Eve", "pernambuco", "eve@example.com", "567-890-1234", True),  # Blocked seller
-    create_seller(6, "Frank", "bahia", "frank@example.com", "678-901-2345", False)
+    Seller(4, "Dave", "goiania", "dave@example.com", "456-789-0123", False),
+    Seller(5, "Eve", "pernambuco", "eve@example.com", "567-890-1234", True),  # Blocked seller
+    Seller(6, "Frank", "bahia", "frank@example.com", "678-901-2345", False)
 ]
 
 # Creating dictionaries for faster lookups
