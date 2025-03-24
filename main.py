@@ -141,23 +141,16 @@ sellers = [
 customer_dict = {customer.customer_id: customer for customer in customers}
 seller_dict = {seller.customer_id: seller for seller in sellers}
 
-# Generating a list of products
-categories = ["Acrilico premium"]
-finishes = ["fosco", "semibrilho"]
-colors = ["black", "white", "green"]
-weights = [500, 1000, 2000]  # Weights in milliliters
-
+# Generate products from price table data
 code_counter = 100
 products = {}
-for category in categories:
-    for finish in finishes:
-        for color in colors:
-            for weight in weights:
-                code = f"P{code_counter}"
-                flammable = color in ["black", "green"]  # Example flammability rule
-                product = Product(category, finish, color, weight, code, flammable)
-                products[code_counter] = product
-                code_counter += 1
+for table_key in price_tables['711'].keys():
+    category, finish, color, weight, _ = table_key
+    code = f"P{code_counter}"
+    flammable = color in ["black", "green"]  # Example flammability rule
+    product = Product(category, finish, color, weight, code, flammable)
+    products[code_counter] = product
+    code_counter += 1
 
 def get_customer_by_id(customer_id):
     return customer_dict.get(customer_id, None)
