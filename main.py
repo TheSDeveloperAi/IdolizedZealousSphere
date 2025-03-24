@@ -131,7 +131,7 @@ def create_customer(customer_id, name, address, email, phone, seller_id, block=F
 
 # Factory function to create a Seller object
 def create_seller(customer_id, name, address, email, phone, block=False):
-    return Seller(customer_id, name, address, email, phone, None, block)
+    return Seller(customer_id, name, address, email, phone, block)
 
 # List of customers using the factory function
 customers = [
