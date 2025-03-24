@@ -92,6 +92,7 @@ class Customer:
             **order_details
         })
 
+@dataclass
 class Product:
     category: str
     finish: str
