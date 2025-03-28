@@ -19,20 +19,26 @@ base_prices = {
 # Price tables
 price_tables = {"711": {}, "411": {}}
 
-def calculate_price(weight, location):
-    """Calculate price based on weight and location."""
-    return base_prices[weight] * price_factors[location]
-
+def calculate_price(weight, location, table):
+    """Calculate price based on weight, location, and table."""
+    base_price = base_prices[weight] * price_factors[location]
+    # Adjust prices based on the table
+    if table == "711":
+        return base_price  # Standard pricing
+    elif table == "411":
+        return base_price * 0.9  # For example, 10% discount
+                
 def populate_price_tables():
-    """Populate the price_tables with computed prices."""
+    """Populate the price tables with computed prices."""
     for table in price_tables:
         for category in ["Acrilico premium"]:
             for finish in ["fosco", "semibrilho"]:
                 for color in ["black", "white", "green"]:
                     for weight in base_prices:
                         for location in locations:
-                            price = calculate_price(weight, location)
+                            price = calculate_price(weight, location, table)
                             price_tables[table][(category, finish, color, weight, location)] = price
+                        
 
 # Initialize price tables
 populate_price_tables()
