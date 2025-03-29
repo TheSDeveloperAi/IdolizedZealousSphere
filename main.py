@@ -132,7 +132,7 @@ customers = [
     Customer(2, "Bob", "pernambuco", "bob@example.com", "234-567-8901", 5, True),  # Blocked customer
     Customer(3, "Carol", "bahia", "carol@example.com", "345-678-9012", 6, False)
 ]
-
+p
 # List of sellers
 sellers = [
     Seller(4, "Dave", "goiania", "dave@example.com", "456-789-0123", False),
