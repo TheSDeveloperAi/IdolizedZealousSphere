@@ -80,9 +80,6 @@ class Customer:
     def __str__(self) -> str:
         return f"Customer(customer_id='{self.customer_id}', name='{self.name}', address='{self.address}', email='{self.email}', phone='{self.phone}', seller_id='{self.seller_id}', block={self.block})"
 
-    def is_blocked(self) -> bool:
-        """Check if customer is blocked."""
-        return self.block
 
     def get_location(self) -> str:
         """Get customer's location for pricing."""
