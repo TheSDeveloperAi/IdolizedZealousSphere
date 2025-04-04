@@ -163,9 +163,6 @@ def get_customer_by_id(customer_id):
 def get_seller_by_id(seller_id):
     return seller_dict.get(seller_id, None)
 
-def get_product_by_id(product_id):
-    return products.get(product_id, None)
-
 # Function to add new products by code until the user finishes
 def add_products_by_code(customer, seller, commission_rate):
     apply_discount = lambda price, discount: price - (price * discount / 100)
