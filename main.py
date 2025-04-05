@@ -80,12 +80,12 @@ class Customer:
     def __str__(self) -> str:
         return f"Customer(customer_id='{self.customer_id}', name='{self.name}', address='{self.address}', email='{self.email}', phone='{self.phone}', seller_id='{self.seller_id}', block={self.block})"
 
-    def add_to_order_history(self, order_details: dict) -> None:
-        """Add an order to customer's history."""
-        self._order_history.append({
-            'date': datetime.now(),
-            **order_details
-        })
+  #  def add_to_order_history(self, order_details: dict) -> None:   #not currently used
+    #    """Add an order to customer's history."""
+    #    self._order_history.append({
+      #      'date': datetime.now(),
+      #      **order_details
+     #   })
 
 @dataclass
 class Product:
@@ -108,14 +108,14 @@ class Seller(Customer):
         self._total_commission += commission
         return commission
 
-    def record_sale(self, customer_id: int, total_price: float, commission: float) -> None:
-        """Record a sale in seller's history."""
-        self._sales_history.append({
-            'date': datetime.now(),
-            'customer_id': customer_id,
-            'total_price': total_price,
-            'commission': commission
-        })
+#    def record_sale(self, customer_id: int, total_price: float, commission: float) -> None:   #not currently used
+     #   """Record a sale in seller's history."""
+    #    self._sales_history.append({
+       #     'date': datetime.now(),
+        #    'customer_id': customer_id,
+        #    'total_price': total_price,
+        #    'commission': commission
+     #   })
 
     def get_total_commission(self) -> float:
         """Get total commission earned."""
