@@ -349,15 +349,14 @@ def search_by_address(address, entity_type="customer"):
     results = [entity for entity in entity_dict.values() if address.lower() in entity.address.lower()]
     return results
 
-def main_program():
-    global customer_product_list
-    customer_product_list = {}
-    global table
 
-    current_datetime = datetime.now()
-    print(f"Current date and time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+# ... (Rest of your code remains the same until the main_program function) ...
 
-    seller = None
+# ---------------------------
+# Helper Functions for Main Program
+# ---------------------------
+def _get_valid_seller():
+    """Gets a valid seller ID from the user, with search options."""
     while True:
         user_input = input("Enter the seller ID directly, or type 'name' to search by name, or 'address' to search by address: ").lower()
         if user_input.isnumeric():
@@ -368,7 +367,7 @@ def main_program():
                     print("Seller no longer at the company. Please contact HR for clarification.")
                 else:
                     print(f"Seller Details:\nID: {seller.customer_id}\nName: {seller.name}\nAddress: {seller.address}\nEmail: {seller.email}\nPhone: {seller.phone}")
-                    break
+                    return seller
             else:
                 print("Invalid seller ID. Please try again.")
         elif user_input == "name":
@@ -392,66 +391,90 @@ def main_program():
         else:
             print("Invalid input. Please try again.")
 
-    commission_rate = 0.0
-    if seller:
-        while True:
-            try:
-                commission_rate = float(input("Enter the commission rate for the seller (0-100): "))
-                if 0 <= commission_rate <= 100:
-                    break
-                else:
-                    print("Commission rate must be between 0 and 100. Please try again.")
-            except ValueError:
-                print("Invalid input. Please enter a valid numeric commission rate.")
-
-        customer = None
-        while True:
-            user_input = input("Enter the customer ID directly, or type 'name' to search by name, or 'address' to search by address: ").lower()
-            if user_input.isnumeric():
-                customer_id = int(user_input)
-                customer = get_customer_by_id(customer_id)
-                if customer:
-                    if customer.block:
-                        print("Customer's blocked due to lack of payment on recent orders. Please contact the financial department.")
-                    else:
-                        if customer.seller_id == seller.customer_id:
-                            print(f"Customer Details:\nID: {customer.customer_id}\nName: {customer.name}\nAddress: {customer.address}\nEmail: {customer.email}\nPhone: {customer.phone}")
-                            break
-                        else:
-                            print(f"Customer ID {customer_id} is not registered to Seller ID {seller.customer_id}. Please try again.")
-                else:
-                    print("Invalid customer ID. Please try again.")
-            elif user_input == "name":
-                search_value = input("Enter the name (or part of the name) of the customer: ").lower()
-                results = search_by_name(search_value, entity_type="customer")
-                if results:
-                    print("Found customers:")
-                    for c in results:
-                        print(f"ID: {c.customer_id}, Name: {c.name}, Address: {c.address}, Email: {c.email}, Phone: {c.phone}")
-                else:
-                    print("No customers found with the given information.")
-            elif user_input == "address":
-                search_value = input("Enter the address of the customer: ").lower()
-                results = search_by_address(search_value, entity_type="customer")
-                if results:
-                    print("Found customers:")
-                    for c in results:
-                        print(f"ID: {c.customer_id}, Name: {c.name}, Address: {c.address}, Email: {c.email}, Phone: {c.phone}")
-                else:
-                    print("No customers found with the given information.")
+def _get_commission_rate():
+    """Gets the commission rate from the user."""
+    while True:
+        try:
+            commission_rate = float(input("Enter the commission rate for the seller (0-100): "))
+            if 0 <= commission_rate <= 100:
+                return commission_rate
             else:
-                print("Invalid input. Please try again.")
+                print("Commission rate must be between 0 and 100. Please try again.")
+        except ValueError:
+            print("Invalid input. Please enter a valid numeric commission rate.")
+
+def _get_valid_customer(seller):
+    """Gets a valid customer ID from the user, with search and seller association check."""
+    while True:
+        user_input = input("Enter the customer ID directly, or type 'name' to search by name, or 'address' to search by address: ").lower()
+        if user_input.isnumeric():
+            customer_id = int(user_input)
+            customer = get_customer_by_id(customer_id)
+            if customer:
+                if customer.block:
+                    print("Customer's blocked due to lack of payment on recent orders. Please contact the financial department.")
+                else:
+                    if customer.seller_id == seller.customer_id:
+                        print(f"Customer Details:\nID: {customer.customer_id}\nName: {customer.name}\nAddress: {customer.address}\nEmail: {customer.email}\nPhone: {customer.phone}")
+                        return customer
+                    else:
+                        print(f"Customer ID {customer_id} is not registered to Seller ID {seller.customer_id}. Please try again.")
+            else:
+                print("Invalid customer ID. Please try again.")
+        elif user_input == "name":
+            search_value = input("Enter the name (or part of the name) of the customer: ").lower()
+            results = search_by_name(search_value, entity_type="customer")
+            if results:
+                print("Found customers:")
+                for c in results:
+                    print(f"ID: {c.customer_id}, Name: {c.name}, Address: {c.address}, Email: {c.email}, Phone: {c.phone}")
+            else:
+                print("No customers found with the given information.")
+        elif user_input == "address":
+            search_value = input("Enter the address of the customer: ").lower()
+            results = search_by_address(search_value, entity_type="customer")
+            if results:
+                print("Found customers:")
+                for c in results:
+                    print(f"ID: {c.customer_id}, Name: {c.name}, Address: {c.address}, Email: {c.email}, Phone: {c.phone}")
+                else:
+                    print("No customers found with the given information.")
+        else:
+            print("Invalid input. Please try again.")
+
+def _get_table_number():
+    """Gets a valid table number from the user."""
+    while True:
+        table = input("Enter the table number (711 or 411): ")
+        if table in PRICE_TABLES:
+            return table
+        else:
+            print("Invalid table number. Please enter 711 or 411.")
+
+# ---------------------------
+# Main Program Logic (Refactored)
+# ---------------------------
+def main_program():
+    global customer_product_list
+    customer_product_list = {}
+    global table
+
+    current_datetime = datetime.now()
+    print(f"Current date and time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    seller = _get_valid_seller()
+
+    if seller:
+        commission_rate = _get_commission_rate()
+        customer = _get_valid_customer(seller)
 
         if customer:
-            while True:
-                table = input("Enter the table number (711 or 411): ")
-                if table in PRICE_TABLES:
-                    break
-                else:
-                    print("Invalid table number. Please enter 711 or 411.")
-
+            table = _get_table_number()
             add_products_by_code(customer, seller, commission_rate, table)
 
+# ---------------------------
+# Entry Point (No changes)
+# ---------------------------
 if __name__ == "__main__":
     while True:
         print("\nWelcome to the Sales System!")
@@ -463,3 +486,4 @@ if __name__ == "__main__":
             main_program()
         else:
             print("Invalid choice. Please enter 'start' or 'exit'.")
+
