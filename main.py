@@ -354,42 +354,39 @@ def add_products_by_code(customer, seller, commission_rate, table):
  # --- Integration of Transport Cost ---
     transport = None
     while True:
-        transport_id_str = input("Enter the Transport ID for this order (or press Enter to skip): ")
+        transport_id_str = input("Enter the Transport ID for this order: ")
         if not transport_id_str:
-            print("No Transport ID provided.")
-            break
+            print("Transport ID cannot be empty. Please enter a valid ID.")
+            continue
         try:
             transport_id = int(transport_id_str)
             transport = transport_dict.get(transport_id)
             if transport:
                 break  # Valid ID found
             else:
-                print("Invalid Transport ID. Please try again or press Enter to skip.")
+                print("Invalid Transport ID. Please try again.")
         except ValueError:
-            print("Invalid input. Please enter a valid numeric Transport ID or press Enter to skip.")
+            print("Invalid input. Please enter a valid numeric Transport ID.")
 
     if transport:
         while True:
             sender_input = input(f"Is '{transport.name}' the sender? (yes/no): ").lower()
             if sender_input == 'yes':
                 transport.sender = True
+                transport_fee = transport.calculate_transport_fee(total_weight)
+                if transport_fee > 0:
+                    total_price += transport_fee
+                    print(f"Transport fee (sender '{transport.name}'): ${transport_fee:.2f}")
+                elif transport.sender:
+                    print(f"Transport '{transport.name}' is the sender, but the calculated fee is $0.00 (likely due to zero total weight).")
                 break
             elif sender_input == 'no':
                 transport.sender = False
+                print(f"Transport '{transport.name}' has been recorded for this order. No transport fee applied as it is not the sender.")
                 break
             else:
                 print("Invalid input. Please enter 'yes' or 'no'.")
-
-        transport_fee = transport.calculate_transport_fee(total_weight)
-        if transport_fee > 0:
-            total_price += transport_fee
-            print(f"Transport fee (sender '{transport.name}'): ${transport_fee:.2f}")
-        elif transport.sender:
-            print(f"Transport '{transport.name}' is the sender, but the calculated fee is $0.00 (likely due to zero total weight).")
-        else:
-            print(f"Transport '{transport.name}' is not the sender, so no transport fee is applied.")
-    else:
-        print("No valid Transport ID entered. No transport fee applied.")
+    # No 'else' needed here as we now require a Transport ID.
     # --- End of Transport Cost Integration ---
 
 
