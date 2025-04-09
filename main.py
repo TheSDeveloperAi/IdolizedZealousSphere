@@ -111,6 +111,20 @@ class Seller(Customer):
         """Get total commission earned."""
         return self._total_commission
 
+class Transport(Customer):
+     def __init__(self, customer_id: int, name: str,  address: str, email: str, phone: str, block:  bool=False, cost: float = 0.0):
+         super().__init__(customer_id, name, address, email, phone, None, block)
+         self.cost = cost
+         self.sender = False
+
+     def calculate_transport_fee(self, total_weight_ml: float) -> float:
+         """Calculates the transport fee based on total weight in kg."""
+         if self.sender:
+             total_weight_kg = total_weight_ml / 1000.0
+             return total_weight_kg * self.cost
+         else:
+             return 0.0
+
 # ---------------------------
 # Sample Data and Product Generation
 # ---------------------------
@@ -126,8 +140,16 @@ sellers = [
     Seller(6, "Frank", "bahia", "frank@example.com", "678-901-2345", False)
 ]
 
+
+transportation_list = [
+    Transport(7, "Your Truck ldta", "Your Truck", "yourtruck@gmail.com", "667-553-767", False, cost=2.50),
+    Transport(8, "Another Courier", "Some Address", "courier@email.com", "111-222-3333", False, cost=3.00),
+    # Add more Transport objects with different costs
+]
+
 customer_dict = {customer.customer_id: customer for customer in customers}
 seller_dict = {seller.customer_id: seller for seller in sellers}
+transport_dict = {transport.customer_id: transport for transport in transportation_list}
 
 code_counter = 100
 products = {}
@@ -328,6 +350,48 @@ def add_products_by_code(customer, seller, commission_rate, table):
     print(f"Total weight for all added products: {total_weight} ml")
     print(f"Total flammable weight: {flammable_weight} ml")
     print(f"Total non-flammable weight: {non_flammable_weight} ml")
+
+ # --- Integration of Transport Cost ---
+    transport = None
+    while True:
+        transport_id_str = input("Enter the Transport ID for this order (or press Enter to skip): ")
+        if not transport_id_str:
+            print("No Transport ID provided.")
+            break
+        try:
+            transport_id = int(transport_id_str)
+            transport = transport_dict.get(transport_id)
+            if transport:
+                break  # Valid ID found
+            else:
+                print("Invalid Transport ID. Please try again or press Enter to skip.")
+        except ValueError:
+            print("Invalid input. Please enter a valid numeric Transport ID or press Enter to skip.")
+
+    if transport:
+        while True:
+            sender_input = input(f"Is '{transport.name}' the sender? (yes/no): ").lower()
+            if sender_input == 'yes':
+                transport.sender = True
+                break
+            elif sender_input == 'no':
+                transport.sender = False
+                break
+            else:
+                print("Invalid input. Please enter 'yes' or 'no'.")
+
+        transport_fee = transport.calculate_transport_fee(total_weight)
+        if transport_fee > 0:
+            total_price += transport_fee
+            print(f"Transport fee (sender '{transport.name}'): ${transport_fee:.2f}")
+        elif transport.sender:
+            print(f"Transport '{transport.name}' is the sender, but the calculated fee is $0.00 (likely due to zero total weight).")
+        else:
+            print(f"Transport '{transport.name}' is not the sender, so no transport fee is applied.")
+    else:
+        print("No valid Transport ID entered. No transport fee applied.")
+    # --- End of Transport Cost Integration ---
+
 
     commission = seller.calculate_commission(total_price, commission_rate)
     print(f"Commission for the seller at {commission_rate}% is: ${commission:.2f}")
