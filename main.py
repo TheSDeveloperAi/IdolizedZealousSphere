@@ -351,7 +351,7 @@ def add_products_by_code(customer, seller, commission_rate, table):
     print(f"Total flammable weight: {flammable_weight} ml")
     print(f"Total non-flammable weight: {non_flammable_weight} ml")
 
- # --- Integration of Transport Cost ---
+    # --- Integration of Transport Cost ---
     transport = None
     while True:
         transport_id_str = input("Enter the Transport ID for this order: ")
@@ -386,9 +386,9 @@ def add_products_by_code(customer, seller, commission_rate, table):
                 break
             else:
                 print("Invalid input. Please enter 'yes' or 'no'.")
-    # No 'else' needed here as we now require a Transport ID.
     # --- End of Transport Cost Integration ---
 
+    print(f"\nFinal Total Price: ${total_price:.2f}") # Added this line
 
     commission = seller.calculate_commission(total_price, commission_rate)
     print(f"Commission for the seller at {commission_rate}% is: ${commission:.2f}")
