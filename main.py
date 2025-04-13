@@ -1,4 +1,4 @@
-from datetime import datetime
+thefrom datetime import datetime
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Optional
 
@@ -245,57 +245,65 @@ def _add_new_product(product_code, customer, table, customer_product_list, produ
     """Helper function to add a new product to the order."""
     apply_discount = lambda price, discount: price - (price * discount / 100)
     calculate_tax = lambda price, flammable: price * TAX_RATES.get(customer.address, 0) if flammable else 0
-    if product_code in products:
-        if product_code in customer_product_list:
-            print("This product is already in your list.")
-            return total_price, total_weight, flammable_weight, non_flammable_weight, volumes, False
-        else:
-            product = products[product_code]
-            while True:
-                try:
-                    quantity = int(input("Enter the quantity for this product: "))
-                    if quantity <= 0:
-                        print("Quantity must be a positive number. Please try again.")
-                    elif product.weight == 500 and quantity % 4 != 0:
-                        print("Quantity for 500ml products must be a multiple of 4. Please try again.")
-                    else:
-                        break
-                except ValueError:
-                    print("Invalid input. Please enter a valid numeric quantity.")
-            while True:
-                try:
-                    discount = float(input("Enter the discount for this product (0-100): "))
-                    if 0 <= discount <= 100:
-                        break
-                    else:
-                        print("Discount must be between 0 and 100. Please try again.")
-                except ValueError:
-                    print("Invalid input. Please enter a valid numeric discount.")
-            customer_product_list[product_code] = (quantity, discount)
-            base_price = get_price(table, product, customer.address)
-            if base_price is not None:
-                discounted_price = apply_discount(base_price, discount)
-                tax = calculate_tax(discounted_price, product.flammable)
-                item_total_price = (discounted_price + tax) * quantity
-                total_price += item_total_price
-                total_weight += product.weight * quantity
-                if product.flammable:
-                    flammable_weight += product.weight * quantity
-                else:
-                    non_flammable_weight += product.weight * quantity
-                if product.weight == 500:
-                    volumes[500] += quantity // 4
-                else:
-                    volumes[product.weight] += quantity
-                print(f"Product {products[product_code]} has been added successfully!")
-                print(f"Subtotal price of {quantity} unit(s) of product {product_code} with discount and tax is ${item_total_price:.2f}")
-                return total_price, total_weight, flammable_weight, non_flammable_weight, volumes, True
-            else:
-                print("Invalid table number or location.")
+    try:
+        product_code_int = int(product_code)
+        if product_code_int in products:
+            if product_code in customer_product_list:
+                print("This product is already in your list.")
                 return total_price, total_weight, flammable_weight, non_flammable_weight, volumes, False
-    else:
-        print("Invalid product code. Please try again.")
+            else:
+                product = products[product_code_int]
+                while True:
+                    try:
+                        quantity = int(input("Enter the quantity for this product: "))
+                        if quantity <= 0:
+                            print("Quantity must be a positive number. Please try again.")
+                        elif product.weight == 500 and quantity % 4 != 0:
+                            print("Quantity for 500ml products must be a multiple of 4. Please try again.")
+                        else:
+                            break
+                    except ValueError:
+                        print("Invalid input. Please enter a valid numeric quantity.")
+                while True:
+                    try:
+                        discount = float(input("Enter the discount for this product (0-100): "))
+                        if 0 <= discount <= 100:
+                            break
+                        else:
+                            print("Discount must be between 0 and 100. Please try again.")
+                    except ValueError:
+                        print("Invalid input. Please enter a valid numeric discount.")
+                customer_product_list[product_code] = (quantity, discount)
+                base_price = get_price(table, product, customer.address)
+                if base_price is not None:
+                    discounted_price = apply_discount(base_price, discount)
+                    tax = calculate_tax(discounted_price, product.flammable)
+                    item_total_price = (discounted_price + tax) * quantity
+                    total_price += item_total_price
+                    total_weight += product.weight * quantity
+                    if product.flammable:
+                        flammable_weight += product.weight * quantity
+                    else:
+                        non_flammable_weight += product.weight * quantity
+                    if product.weight == 500:
+                        volumes[500] += quantity // 4
+                    else:
+                        volumes[product.weight] += quantity
+                    print(f"Product {products[product_code_int]} has been added successfully!")
+                    print(f"Subtotal price of {quantity} unit(s) of product {product_code} with discount and tax is ${item_total_price:.2f}")
+                    return total_price, total_weight, flammable_weight, non_flammable_weight, volumes, True
+                else:
+                    print("Invalid table number or location.")
+                    return total_price, total_weight, flammable_weight, non_flammable_weight, volumes, False
+        else:
+            print("Invalid product code. Please try again.")
+            return total_price, total_weight, flammable_weight, non_flammable_weight, volumes, False
+    except ValueError:
+        print("Invalid product code format.") # Added for robustness
         return total_price, total_weight, flammable_weight, non_flammable_weight, volumes, False
+
+
+
 
 # ---------------------------
 # Order Processing Functionality (Refactored)
@@ -311,84 +319,96 @@ def add_products_by_code(customer, seller, commission_rate, table):
     flammable_weight = 0
     non_flammable_weight = 0
     volumes = {500: 0, 1000: 0, 2000: 0}
+    transport_info_entered = False  # Flag to track if transport info is entered
 
-    print("Enter product codes to add products. Type 'finish' to end, 'del' to delete a product, 'qua' to change quantity, or 'disc' to change discount.")
+    print("\nOrder Processing:")
     while True:
-        user_input = input("Enter the product code, 'del' to delete, 'qua' to change quantity, 'disc' to change discount, or 'finish' to end: ").lower()
-        if user_input == "finish":
-            break
-        elif user_input.startswith("del"):
+        print("\nEnter product code to add (or choose an option):")
+        print("  2. Delete Product")
+        print("  3. Change Quantity")
+        print("  4. Change Discount")
+        print("  5. Enter Transport Information")
+        print("  6. Finish Order")
+        user_input = input("Enter code or option number: ").strip()
+
+        if user_input == '2':
             try:
-                del_code = int(user_input.split()[1])
+                del_code = input("Enter the product code to delete: ")
                 total_price, total_weight, flammable_weight, non_flammable_weight, volumes, _ = _delete_product(
                     del_code, customer, table, customer_product_list, products, total_price, total_weight, flammable_weight, non_flammable_weight, volumes
                 )
-            except (ValueError, IndexError):
-                print("Invalid input. Please enter 'del' followed by a valid product code to delete.")
-        elif user_input.startswith("qua"):
+            except ValueError:
+                print("Invalid product code. Please enter a valid code.")
+        elif user_input == '3':
             try:
-                qua_code = int(user_input.split()[1])
+                qua_code = input("Enter the product code to change quantity for: ")
                 _change_quantity(qua_code, customer_product_list, products)
-            except (ValueError, IndexError):
-                print("Invalid input. Please enter 'qua' followed by a valid product code.")
-        elif user_input.startswith("disc"):
+            except ValueError:
+                print("Invalid product code. Please enter a valid code.")
+        elif user_input == '4':
             try:
-                disc_code = int(user_input.split()[1])
+                disc_code = input("Enter the product code to change discount for: ")
                 _apply_discount_to_product(disc_code, customer_product_list)
-            except (ValueError, IndexError):
-                print("Invalid input. Please enter 'disc' followed by a valid product code.")
+            except ValueError:
+                print("Invalid product code. Please enter a valid code.")
+        elif user_input == '5':
+            # --- Integration of Transport Cost ---
+            transport = None
+            while True:
+                transport_id_str = input("Enter the Transport ID for this order: ")
+                if not transport_id_str:
+                    print("Transport ID cannot be empty. Please enter a valid ID.")
+                    continue
+                try:
+                    transport_id = int(transport_id_str)
+                    transport = transport_dict.get(transport_id)
+                    if transport:
+                        transport_info_entered = True  # Set the flag to True
+                        break  # Valid ID found
+                    else:
+                        print("Invalid Transport ID. Please try again.")
+                except ValueError:
+                    print("Invalid input. Please enter a valid numeric Transport ID.")
+
+            if transport:
+                while True:
+                    sender_input = input(f"Is '{transport.name}' the sender? (yes/no): ").lower()
+                    if sender_input == 'yes':
+                        transport.sender = True
+                        transport_fee = transport.calculate_transport_fee(total_weight)
+                        if transport_fee > 0:
+                            total_price += transport_fee
+                            print(f"Transport fee (sender '{transport.name}'): ${transport_fee:.2f}")
+                        elif transport.sender:
+                            print(f"Transport '{transport.name}' is the sender, but the calculated fee is $0.00 (likely due to zero total weight).")
+                        break
+                    elif sender_input == 'no':
+                        transport.sender = False
+                        print(f"Transport '{transport.name}' has been recorded for this order. No transport fee applied as it is not the sender.")
+                        break
+                    else:
+                        print("Invalid input. Please enter 'yes' or 'no'.")
+        elif user_input == '6':
+            if not transport_info_entered:
+                print("Please enter the transport information (option 5) before finishing the order.")
+            else:
+                break # Finish order
         else:
+            product_code_str = user_input
             try:
-                product_code = int(user_input)
+                product_code = int(product_code_str)
                 total_price, total_weight, flammable_weight, non_flammable_weight, volumes, _ = _add_new_product(
-                    product_code, customer, table, customer_product_list, products, total_price, total_weight, flammable_weight, non_flammable_weight, volumes
+                    product_code_str, customer, table, customer_product_list, products, total_price, total_weight, flammable_weight, non_flammable_weight, volumes
                 )
             except ValueError:
-                print("Invalid input. Please enter a valid numeric product code, or type 'finish' to end.")
+                print("Invalid input. Please enter a valid product code or an option number.")
 
     print(f"Total price for all added products: ${total_price:.2f}")
     print(f"Total weight for all added products: {total_weight} ml")
     print(f"Total flammable weight: {flammable_weight} ml")
     print(f"Total non-flammable weight: {non_flammable_weight} ml")
 
-    # --- Integration of Transport Cost ---
-    transport = None
-    while True:
-        transport_id_str = input("Enter the Transport ID for this order: ")
-        if not transport_id_str:
-            print("Transport ID cannot be empty. Please enter a valid ID.")
-            continue
-        try:
-            transport_id = int(transport_id_str)
-            transport = transport_dict.get(transport_id)
-            if transport:
-                break  # Valid ID found
-            else:
-                print("Invalid Transport ID. Please try again.")
-        except ValueError:
-            print("Invalid input. Please enter a valid numeric Transport ID.")
-
-    if transport:
-        while True:
-            sender_input = input(f"Is '{transport.name}' the sender? (yes/no): ").lower()
-            if sender_input == 'yes':
-                transport.sender = True
-                transport_fee = transport.calculate_transport_fee(total_weight)
-                if transport_fee > 0:
-                    total_price += transport_fee
-                    print(f"Transport fee (sender '{transport.name}'): ${transport_fee:.2f}")
-                elif transport.sender:
-                    print(f"Transport '{transport.name}' is the sender, but the calculated fee is $0.00 (likely due to zero total weight).")
-                break
-            elif sender_input == 'no':
-                transport.sender = False
-                print(f"Transport '{transport.name}' has been recorded for this order. No transport fee applied as it is not the sender.")
-                break
-            else:
-                print("Invalid input. Please enter 'yes' or 'no'.")
-    # --- End of Transport Cost Integration ---
-
-    print(f"\nFinal Total Price: ${total_price:.2f}") # Added this line
+    print(f"\nFinal Total Price: ${total_price:.2f}")
 
     commission = seller.calculate_commission(total_price, commission_rate)
     print(f"Commission for the seller at {commission_rate}% is: ${commission:.2f}")
