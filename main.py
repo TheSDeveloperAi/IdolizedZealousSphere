@@ -321,6 +321,9 @@ def add_products_by_code(customer, seller, commission_rate, table):
     volumes = {500: 0, 1000: 0, 2000: 0}
     transport_info_entered = False  # Flag to track if transport info is entered
 
+    apply_discount = lambda price, discount: price - (price * discount / 100)
+    calculate_tax = lambda price, flammable: price * TAX_RATES.get(customer.address, 0) if flammable else 0
+
     print("\nOrder Processing:")
     while True:
         print("\nEnter product code to add (or choose an option):")
@@ -392,6 +395,20 @@ def add_products_by_code(customer, seller, commission_rate, table):
             if not transport_info_entered:
                 print("Please enter the transport information (option 5) before finishing the order.")
             else:
+                if customer_product_list:
+                    print("\n--- Order Summary ---")
+                    print(f"{'Product':<30} {'Code':<10} {'Qty':<5} {'Price':<10}")
+                    print("-" * 55)
+                    for code, (quantity, discount) in customer_product_list.items():
+                        product = products[int(code)]
+                        base_price = get_price(table, product, customer.address)
+                        if base_price is not None:
+                            discounted_price = apply_discount(base_price, discount)
+                            tax = calculate_tax(discounted_price, product.flammable)
+                            unit_price = discounted_price + tax
+                            product_name = f"{product.category} ({product.finish}, {product.color}, {product.weight}ml)"
+                            print(f"{product_name:<30} {code:<10} {quantity:<5} ${unit_price:<9.2f}")
+                    print("-" * 55)
                 break # Finish order
         else:
             product_code_str = user_input
@@ -416,6 +433,7 @@ def add_products_by_code(customer, seller, commission_rate, table):
     print("\nVolume Summary:")
     for weight, volume in volumes.items():
         print(f"{weight} ml: {volume} packages")
+
 
 # ---------------------------
 # Search and Main Program Logic (No changes in this snippet)
