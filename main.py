@@ -1,5 +1,6 @@
 from datetime import datetime
 from dataclasses import dataclass
+import pandas as pd
 from typing import Dict, List, Tuple, Optional
         #test3
 # ---------------------------
@@ -308,6 +309,8 @@ def _add_new_product(product_code, customer, table, customer_product_list, produ
 # ---------------------------
 # Order Processing Functionality (Refactored)
 # ---------------------------
+import pandas as pd # Make sure this is at the top of your script
+
 def add_products_by_code(customer, seller, commission_rate, table):
     """
     Allow adding, deleting, and modifying products by their code. Calculates totals
@@ -395,20 +398,29 @@ def add_products_by_code(customer, seller, commission_rate, table):
             if not transport_info_entered:
                 print("Please enter the transport information (option 5) before finishing the order.")
             else:
+                order_data = []
                 if customer_product_list:
-                    print("\n--- Order Summary ---")
-                    print(f"{'Product':<30} {'Code':<10} {'Qty':<5} {'Price':<10}")
-                    print("-" * 55)
                     for code, (quantity, discount) in customer_product_list.items():
                         product = products[int(code)]
                         base_price = get_price(table, product, customer.address)
                         if base_price is not None:
                             discounted_price = apply_discount(base_price, discount)
-                            tax = calculate_tax(discounted_price, product.flammable)
-                            unit_price = discounted_price + tax
+                            tax_amount = calculate_tax(discounted_price, product.flammable) * quantity
+                            item_total_before_tax = discounted_price * quantity
+                            item_total_with_tax = item_total_before_tax + tax_amount
                             product_name = f"{product.category} ({product.finish}, {product.color}, {product.weight}ml)"
-                            print(f"{product_name:<30} {code:<10} {quantity:<5} ${unit_price:<9.2f}")
-                    print("-" * 55)
+                            order_data.append({
+                                'Code': code,
+                                'Product name': product_name,
+                                'Total': f"{item_total_before_tax:.2f}",
+                                'Tax': f"{tax_amount:.2f}",
+                                'total price + fees': f"{item_total_with_tax:.2f}"
+                            })
+                    if order_data:
+                        df = pd.DataFrame(order_data)
+                        print("\n--- Order Summary ---")
+                        print(df.to_string(index=False, col_space={'Code': 6, 'Product name': 30, 'Total': 8, 'Tax': 8, 'total price + fees': 18}))
+                        print("--- End of Order Summary ---")
                 break # Finish order
         else:
             product_code_str = user_input
