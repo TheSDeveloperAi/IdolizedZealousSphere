@@ -308,8 +308,7 @@ def _add_new_product(product_code, customer, table, customer_product_list, produ
 
 # ---------------------------
 # Order Processing Functionality (Refactored)
-# ---------------------------
-import pandas as pd # Make sure this is at the top of your script
+# --------------------------
 
 def add_products_by_code(customer, seller, commission_rate, table):
     """
@@ -323,6 +322,7 @@ def add_products_by_code(customer, seller, commission_rate, table):
     non_flammable_weight = 0
     volumes = {500: 0, 1000: 0, 2000: 0}
     transport_info_entered = False  # Flag to track if transport info is entered
+    transport = None # Initialize transport to None outside the loop
 
     apply_discount = lambda price, discount: price - (price * discount / 100)
     calculate_tax = lambda price, flammable: price * TAX_RATES.get(customer.address, 0) if flammable else 0
@@ -359,7 +359,7 @@ def add_products_by_code(customer, seller, commission_rate, table):
                 print("Invalid product code. Please enter a valid code.")
         elif user_input == '5':
             # --- Integration of Transport Cost ---
-            transport = None
+            # transport is already initialized outside the loop
             while True:
                 transport_id_str = input("Enter the Transport ID for this order: ")
                 if not transport_id_str:
@@ -376,7 +376,7 @@ def add_products_by_code(customer, seller, commission_rate, table):
                 except ValueError:
                     print("Invalid input. Please enter a valid numeric Transport ID.")
 
-            if transport:
+            if transport: # Check if transport object was successfully retrieved
                 while True:
                     sender_input = input(f"Is '{transport.name}' the sender? (yes/no): ").lower()
                     if sender_input == 'yes':
@@ -419,9 +419,16 @@ def add_products_by_code(customer, seller, commission_rate, table):
                     if order_data:
                         df = pd.DataFrame(order_data)
                         print("\n--- Order Summary ---")
-                        print(df.to_string(index=False, col_space={'Code': 6, 'Product name': 30, 'Total': 8, 'Tax': 8, 'total price + fees': 18}))
+                        print(df.to_string(index=False, col_space={'Code': 6, 'Product name': 30, 'Total': 8, 'Tax': 8,
+                                                                   'total price + fees': 18}))
                         print("--- End of Order Summary ---")
-                break # Finish order
+
+                        # Calculate and print total items (Corrected)
+                        total_items = len(customer_product_list)
+                        print(f"\nTotal products: {total_items} items")
+
+                    break  # Finish order
+
         else:
             product_code_str = user_input
             try:
@@ -432,6 +439,71 @@ def add_products_by_code(customer, seller, commission_rate, table):
             except ValueError:
                 print("Invalid input. Please enter a valid product code or an option number.")
 
+    # --- Final Summary Section (Updated to use DataFrame) ---
+
+    detail_types = ['ID', 'Name', 'Address', 'Email', 'Phone', 'Seller ID', 'Blocked', 'Total Commission', 'Transport Cost', 'Sender']
+
+    seller_details = [
+        seller.customer_id,
+        seller.name,
+        seller.address,
+        seller.email,
+        seller.phone,
+        'N/A', # Seller ID not applicable for Seller
+        seller.block,
+        f"${seller._total_commission:.2f}",
+        'N/A', # Transport Cost not applicable
+        'N/A'  # Sender not applicable
+    ]
+
+    customer_details = [
+        customer.customer_id,
+        customer.name,
+        customer.address,
+        customer.email,
+        customer.phone,
+        customer.seller_id,
+        customer.block,
+        'N/A', # Total Commission not applicable
+        'N/A', # Transport Cost not applicable
+        'N/A'  # Sender not applicable
+    ]
+
+    transport_details = []
+    if transport_info_entered and transport:
+        transport_details = [
+            transport.customer_id,
+            transport.name,
+            transport.address,
+            transport.email,
+            transport.phone,
+            'N/A', # Seller ID not applicable
+            transport.block,
+            'N/A', # Total Commission not applicable
+            f"${transport.cost:.2f}" if hasattr(transport, 'cost') else 'N/A',
+            transport.sender if hasattr(transport, 'sender') else 'N/A'
+        ]
+    else:
+        # Add placeholders if transport info wasn't entered
+        transport_details = ['N/A'] * len(detail_types)
+
+    # Create the DataFrame
+    participants_data = {
+        'Detail Type': detail_types,
+        'Seller': seller_details,
+        'Customer': customer_details,
+        'Transport': transport_details
+    }
+
+    df_participants = pd.DataFrame(participants_data)
+
+    print("\n--- Order Participants Summary ---")
+    # Adjust col_space based on expected data lengths
+    print(df_participants.to_string(index=False, col_space={'Detail Type': 15, 'Seller': 25, 'Customer': 25, 'Transport': 25}))
+    print("--- End of Order Participants Summary ---")
+
+
+    # ... (Existing print statements for totals, commission, volume summary) ...
     print(f"Total price for all added products: ${total_price:.2f}")
     print(f"Total weight for all added products: {total_weight} ml")
     print(f"Total flammable weight: {flammable_weight} ml")
@@ -445,6 +517,9 @@ def add_products_by_code(customer, seller, commission_rate, table):
     print("\nVolume Summary:")
     for weight, volume in volumes.items():
         print(f"{weight} ml: {volume} packages")
+    # --- End of Final Summary Section ---
+
+
 
 
 # ---------------------------
