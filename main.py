@@ -2,7 +2,6 @@ from datetime import datetime
 from dataclasses import dataclass
 import pandas as pd
 from typing import Dict, List, Tuple, Optional
-        #test3
 # ---------------------------
 # Global Pricing Information
 # ---------------------------
@@ -304,13 +303,42 @@ def _add_new_product(product_code, customer, table, customer_product_list, produ
         return total_price, total_weight, flammable_weight, non_flammable_weight, volumes, False
 
 
+def _get_payment_conditions():
+    """Gets valid payment installment days from the user."""
+    while True:
+        payment_input = input("Enter payment terms as comma-separated days (e.g., 30, 60, 90): ").strip()
+        if not payment_input:
+            print("Payment terms cannot be empty. Please enter the terms.")
+            continue
 
+        terms_list = [term.strip() for term in payment_input.split(',')]
+        valid_terms = []
+        is_valid = True
+
+        for term in terms_list:
+            if not term.isdigit():
+                print(f"Invalid input: '{term}' is not a valid number of days.")
+                is_valid = False
+                break
+            days = int(term)
+            if days < 0:
+                print("Invalid input: Number of days cannot be negative.")
+                is_valid = False
+                break
+            valid_terms.append(days)
+
+        if is_valid and valid_terms:
+            return valid_terms
+        elif is_valid and not valid_terms:
+             print("Invalid input: No valid payment terms entered.")
+        else:
+            print("Please try again.")
 
 # ---------------------------
 # Order Processing Functionality (Refactored)
 # --------------------------
 
-def add_products_by_code(customer, seller, commission_rate, table):
+def add_products_by_code(customer, seller, commission_rate, table, payment_conditions):
     """
     Allow adding, deleting, and modifying products by their code. Calculates totals
     and applies commissions.
@@ -419,16 +447,14 @@ def add_products_by_code(customer, seller, commission_rate, table):
                     if order_data:
                         df = pd.DataFrame(order_data)
                         print("\n--- Order Summary ---")
-                        print(df.to_string(index=False, col_space={'Code': 6, 'Product name': 30, 'Total': 8, 'Tax': 8,
-                                                                   'total price + fees': 18}))
+                        print(df.to_string(index=False, col_space={'Code': 6, 'Product name': 30, 'Total': 8, 'Tax': 8, 'total price + fees': 18}))
                         print("--- End of Order Summary ---")
 
-                        # Calculate and print total items (Corrected)
+                        # Calculate and print total items
                         total_items = len(customer_product_list)
                         print(f"\nTotal products: {total_items} items")
 
-                    break  # Finish order
-
+                break # Finish order
         else:
             product_code_str = user_input
             try:
@@ -439,7 +465,9 @@ def add_products_by_code(customer, seller, commission_rate, table):
             except ValueError:
                 print("Invalid input. Please enter a valid product code or an option number.")
 
-    # --- Final Summary Section (Updated to use DataFrame) ---
+    # --- Final Summary Section ---
+
+    # ... (Existing DataFrame summary for participants) ...
 
     detail_types = ['ID', 'Name', 'Address', 'Email', 'Phone', 'Seller ID', 'Blocked', 'Total Commission', 'Transport Cost', 'Sender']
 
@@ -520,10 +548,24 @@ def add_products_by_code(customer, seller, commission_rate, table):
     # --- End of Final Summary Section ---
 
 
+    # Calculate and print installment details
+    if payment_conditions:
+        num_installments = len(payment_conditions)
+        if num_installments > 0:
+            price_per_installment = total_price / num_installments
+            print("\n--- Payment Schedule ---")
+            print(f"Total installments: {num_installments}")
+            for i, days in enumerate(payment_conditions):
+                 print(f"  Installment {i + 1}: ${price_per_installment:.2f} (due in {days} days)")
+            print("--- End of Payment Schedule ---")
+        else:
+            print("\nPayment: Full amount due immediately.")
 
+
+    return customer_product_list, total_price, total_weight, flammable_weight, volumes
 
 # ---------------------------
-# Search and Main Program Logic (No changes in this snippet)
+# Search and Main Program Logic
 # ---------------------------
 def search_by_name(name, entity_type="customer"):
     entity_dict = customer_dict if entity_type == "customer" else seller_dict
@@ -534,9 +576,6 @@ def search_by_address(address, entity_type="customer"):
     entity_dict = customer_dict if entity_type == "customer" else seller_dict
     results = [entity for entity in entity_dict.values() if address.lower() in entity.address.lower()]
     return results
-
-
-# ... (Rest of your code remains the same until the main_program function) ...
 
 # ---------------------------
 # Helper Functions for Main Program
@@ -638,8 +677,9 @@ def _get_table_number():
             print("Invalid table number. Please enter 711 or 411.")
 
 # ---------------------------
-# Main Program Logic (Refactored)
+# Main Program Logic
 # ---------------------------
+
 def main_program():
     global customer_product_list
     customer_product_list = {}
@@ -648,18 +688,31 @@ def main_program():
     current_datetime = datetime.now()
     print(f"Current date and time: {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    seller = _get_valid_seller()
+    print("\nWelcome to the Sales System!")
+    print("1. Start a New Order")
+    print("2. Exit")
 
-    if seller:
-        commission_rate = _get_commission_rate()
-        customer = _get_valid_customer(seller)
-
-        if customer:
-            table = _get_table_number()
-            add_products_by_code(customer, seller, commission_rate, table)
+    while True:
+        choice = input("Enter your choice: ")
+        if choice == '1':
+            seller = _get_valid_seller()
+            if seller:
+                commission_rate = _get_commission_rate()
+                customer = _get_valid_customer(seller)
+                if customer:
+                    table = _get_table_number()
+                    payment_conditions = _get_payment_conditions()
+                    add_products_by_code(customer, seller, commission_rate, table, payment_conditions)
+            break
+        elif choice == '2':
+            print("Thank you for using the Sales System. Goodbye!")
+            return False
+        else:
+            print("Invalid choice. Please enter 1 or 2.")
+    return True
 
 # ---------------------------
-# Entry Point (No changes)
+# Entry Point
 # ---------------------------
 if __name__ == "__main__":
     while True:
