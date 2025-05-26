@@ -5,6 +5,10 @@ from typing import Dict, List, Tuple, Optional
 # ---------------------------
 # Global Pricing Information
 # ---------------------------
+
+#new text editor_2
+
+
 LOCATIONS = ["goiania", "pernambuco", "bahia"]
 PRICE_FACTORS = {
     "goiania": 4.0,
