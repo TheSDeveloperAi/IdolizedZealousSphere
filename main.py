@@ -6,7 +6,7 @@ from typing import Dict, List, Tuple, Optional
 # Global Pricing Information
 # ---------------------------
 
-#new text editor_2
+#new text editor_10
 
 
 LOCATIONS = ["goiania", "pernambuco", "bahia"]
