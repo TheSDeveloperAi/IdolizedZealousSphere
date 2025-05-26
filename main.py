@@ -1,6 +1,6 @@
 from datetime import datetime
 from dataclasses import dataclass
-import pandas as pd  #test11
+import pandas as pd
 from typing import Dict, List, Tuple, Optional
 # ---------------------------
 # Global Pricing Information
@@ -149,7 +149,6 @@ sellers = [
 transportation_list = [
     Transport(7, "Your Truck ldta", "Your Truck", "yourtruck@gmail.com", "667-553-767", False, cost=2.50),
     Transport(8, "Another Courier", "Some Address", "courier@email.com", "111-222-3333", False, cost=3.00),
-    # Add more Transport objects with different costs
 ]
 
 customer_dict = {customer.customer_id: customer for customer in customers}
@@ -158,7 +157,6 @@ transport_dict = {transport.customer_id: transport for transport in transportati
 
 code_counter = 100
 products = {}
-# Replace your existing product generation loop with this updated version
 
 code_counter = 100
 products = {}
@@ -348,6 +346,7 @@ def _get_payment_conditions():
 # ---------------------------
 # Order Processing Functionality (Refactored)
 # ---------------------------
+import pandas as pd # Make sure this is at the top of your script
 
 def add_products_by_code(customer, seller, commission_rate, table, payment_conditions):
     """
@@ -355,14 +354,14 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
     and applies commissions.
     """
     customer_product_list = {}
-    total_price = 0 # This will accumulate the Line Total (incl Tax) for all products
+    total_price = 0 # This will accumulate the Line Total (incl Tax) for all products + transport fee
     total_weight = 0
     flammable_weight = 0
     non_flammable_weight = 0
     volumes = {500: 0, 1000: 0, 2000: 0}
     transport_info_entered = False
-    transport = None
-    final_transport_fee = 0
+    transport = None # Initialize transport to None outside the loop
+    final_transport_fee = 0 # Initialize final_transport_fee outside the loop
 
     apply_discount = lambda price, discount: price - (price * discount / 100)
     calculate_tax_rate_amount = lambda price, flammable, tax_rate: price * tax_rate if flammable else 0
@@ -380,6 +379,7 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
         if user_input == '2':
             try:
                 del_code = input("Enter the product code to delete: ")
+                # Recalculation logic in option 6 will handle overall totals correctly
                 _delete_product(del_code, customer, table, customer_product_list, products, total_price, total_weight, flammable_weight, non_flammable_weight, volumes)
             except ValueError:
                 print("Invalid product code. Please enter a valid code.")
@@ -387,15 +387,19 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
             try:
                 qua_code = input("Enter the product code to change quantity for: ")
                 _change_quantity(qua_code, customer_product_list, products)
+                 # Recalculation logic in option 6 will handle overall totals correctly
             except ValueError:
                 print("Invalid product code. Please enter a valid code.")
         elif user_input == '4':
             try:
                 disc_code = input("Enter the product code to change discount for: ")
                 _apply_discount_to_product(disc_code, customer_product_list)
+                 # Recalculation logic in option 6 will handle overall totals correctly
             except ValueError:
                 print("Invalid product code. Please enter a valid code.")
         elif user_input == '5':
+             # --- Integration of Transport Cost ---
+             # transport is already initialized outside the loop
             while True:
                 transport_id_str = input("Enter the Transport ID for this order: ")
                 if not transport_id_str:
@@ -405,18 +409,20 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
                     transport_id = int(transport_id_str)
                     transport = transport_dict.get(transport_id)
                     if transport:
-                        transport_info_entered = True
-                        break
+                        transport_info_entered = True  # Set the flag to True
+                        break  # Valid ID found
                     else:
                         print("Invalid Transport ID. Please try again.")
                 except ValueError:
                     print("Invalid input. Please enter a valid numeric Transport ID.")
 
-            if transport:
+            # Note: Transport fee calculation impacting total_price happens when finishing order (option 6)
+            if transport: # Check if transport object was successfully retrieved
                 while True:
                     sender_input = input(f"Is '{transport.name}' the sender? (yes/no): ").lower()
                     if sender_input == 'yes':
                         transport.sender = True
+                        # Fee is calculated and added to total_price in option 6 after final weight is known
                         print(f"Transport '{transport.name}' set as sender. Fee will be calculated based on final weight.")
                         break
                     elif sender_input == 'no':
@@ -431,12 +437,13 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
                 print("Please enter the transport information (option 5) before finishing the order.")
             else:
                 order_data = []
-                total_price = 0
+                # Recalculate totals/weights/volumes/cost here based on customer_product_list
+                total_price = 0 # Reset and recalculate final total price (product totals only initially)
                 total_weight = 0
                 flammable_weight = 0
                 non_flammable_weight = 0
                 volumes = {500: 0, 1000: 0, 2000: 0}
-
+                total_cost = 0.0 # Initialize total_cost for recalculation (product cost only initially)
 
                 if customer_product_list:
                     for code, (quantity, discount) in customer_product_list.items():
@@ -446,11 +453,22 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
                             discounted_price = apply_discount(base_price, discount)
                             tax_rate = TAX_RATES.get(customer.address, 0)
                             tax_amount_per_item = calculate_tax_rate_amount(discounted_price, product.flammable, tax_rate)
+
                             unit_price_before_tax = discounted_price
+                            unit_price_incl_tax = discounted_price + tax_amount_per_item
+
                             item_total_before_tax = discounted_price * quantity
                             line_tax_amount = tax_amount_per_item * quantity
                             line_total_with_tax = item_total_before_tax + line_tax_amount
-                            total_price += line_total_with_tax
+
+                            total_price += line_total_with_tax # Add product line total to running total price
+
+                            # Calculate and add to total_cost (product cost)
+                            line_cost = product.cost * quantity
+                            total_cost += line_cost
+
+
+                            # Recalculate weights and volumes
                             total_weight += product.weight * quantity
                             if product.flammable:
                                 flammable_weight += product.weight * quantity
@@ -471,31 +489,37 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
                                 'Tax Amount': f"{line_tax_amount:.2f}",
                                 'Line Total (incl Tax)': f"{line_total_with_tax:.2f}"
                             })
-                    final_transport_fee = 0
+
+                    # Calculate and add transport fee to final total if transport is sender
+                    final_transport_fee = 0 # Re-initialize for calculation
                     if transport and transport.sender:
                          final_transport_fee = transport.calculate_transport_fee(total_weight)
-                         total_price += final_transport_fee
-                         print(f"\nCalculated final Transport fee (sender '{transport.name}'): ${final_transport_fee:.2f}")
+                         total_price += final_transport_fee # total_price now includes product totals + transport fee
+
 
                     if order_data:
                         df = pd.DataFrame(order_data)
                         print("\n--- Order Summary ---")
                         print(df.to_string(index=False, col_space={'Code': 6, 'Product name': 30, 'Unit Price (before Tax)': 18, 'Total (before Tax)': 15, 'Tax Amount': 10, 'Line Total (incl Tax)': 18}))
                         print("--- End of Order Summary ---")
+
+                        # Calculate and print total items
                         total_items = len(customer_product_list)
                         print(f"\nTotal products: {total_items} items")
 
-                break
+                break # Finish order
         else:
             product_code_str = user_input
             try:
-                product_code_int = int(product_code_str)
+                product_code_int = int(product_code_str) # Ensure code is integer for products dict lookup
                 if product_code_int in products:
+                    # Check if product code (as string) is already in the list
                     if product_code_str in customer_product_list:
                         print("This product is already in your list.")
-                        continue
+                        continue # Go back to the menu
                     else:
-                        product = products[product_code_int]
+                         # Get quantity and discount for the new product
+                        product = products[product_code_int] # Get product object
                         while True:
                             try:
                                 quantity = int(input("Enter the quantity for this product: "))
@@ -504,7 +528,7 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
                                 elif product.weight == 500 and quantity % 4 != 0:
                                     print("Quantity for 500ml products must be a multiple of 4. Please try again.")
                                 else:
-                                    break
+                                    break # Valid quantity entered
                             except ValueError:
                                 print("Invalid input. Please enter a valid numeric quantity.")
 
@@ -512,19 +536,26 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
                             try:
                                 discount = float(input("Enter the discount for this product (0-100): "))
                                 if 0 <= discount <= 100:
-                                    break
+                                    break # Valid discount entered
                                 else:
                                     print("Discount must be between 0 and 100. Please try again.")
                             except ValueError:
                                 print("Invalid input. Please enter a valid numeric discount.")
 
+                        # Add product and its quantity/discount to customer_product_list
                         customer_product_list[product_code_str] = (quantity, discount)
                         print(f"Product {product.code} ({product.category}, {product.weight}ml) added successfully!")
+                        # No need to calculate/update totals here if recalculating in option 6
 
                 else:
-                    print("Invalid product code. Please try again.")
+                    print(f"Invalid product code: {product_code_str}. Please try again.")
             except ValueError:
                 print("Invalid input. Please enter a valid product code or an option number.")
+
+    # --- Final Summary Section ---
+
+    # ... (Existing DataFrame summary for participants) ...
+
     detail_types = ['ID', 'Name', 'Address', 'Email', 'Phone', 'Seller ID', 'Blocked', 'Total Commission', 'Transport Cost', 'Sender']
 
     seller_details = [
@@ -554,6 +585,7 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
     ]
 
     transport_details = []
+    # Check if transport exists before accessing its attributes
     if transport_info_entered and transport:
         transport_details = [
             transport.customer_id,
@@ -563,7 +595,7 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
             transport.phone,
             'N/A',
             transport.block,
-            'N/A',
+            'N/A', # Total Commission not applicable
             f"${transport.cost:.2f}" if hasattr(transport, 'cost') else 'N/A',
             transport.sender if hasattr(transport, 'sender') else 'N/A'
         ]
@@ -582,21 +614,42 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
     print("\n--- Order Participants Summary ---")
     print(df_participants.to_string(index=False, col_space={'Detail Type': 15, 'Seller': 25, 'Customer': 25, 'Transport': 25}))
     print("--- End of Order Participants Summary ---")
+
+
+    # ... (Existing print statements for totals, weights, volumes) ...
+    # These totals are based on the recalculation done before the order summary print
+
+    # --- Print Total Cost of all products (including commission) ---
+    # total_cost already includes product cost
+    # commission is calculated below
+    # We will print the updated total_cost after calculating commission
+
     print(f"\nTotal price for all added products (before Transport Fee): ${total_price - final_transport_fee:.2f}")
     print(f"Total weight for all added products: {total_weight} ml")
     print(f"Total flammable weight: {flammable_weight} ml")
     print(f"Total non-flammable weight: {non_flammable_weight} ml")
+
     print(f"\nFinal Total Order Price (including Transport Fee): ${total_price:.2f}")
+
+    # Commission calculation uses total price BEFORE transport fee
     commission_base_price = total_price - final_transport_fee
     commission = seller.calculate_commission(commission_base_price, commission_rate)
     print(f"Commission for the seller at {commission_rate}% is: ${commission:.2f}")
+
+    # --- Add commission to total_cost and print ---
+    total_cost += commission # Add commission to product cost
+    print(f"\nTotal order cost (products + commission): ${total_cost:.2f}") # Updated print statement
+
+
     print("\nVolume Summary:")
     for weight, volume in volumes.items():
         print(f"{weight} ml: {volume} packages")
+
+    # Calculate and print installment details
     if payment_conditions:
         num_installments = len(payment_conditions)
         if num_installments > 0:
-            price_per_installment = total_price / num_installments
+            price_per_installment = total_price / num_installments # Divide the FINAL total price
             print("\n--- Payment Schedule ---")
             print(f"Total installments: {num_installments}")
             for i, days in enumerate(payment_conditions):
@@ -604,6 +657,10 @@ def add_products_by_code(customer, seller, commission_rate, table, payment_condi
             print("--- End of Payment Schedule ---")
         else:
             print("\nPayment: Full amount due immediately.")
+
+
+    return customer_product_list, total_price, total_weight, flammable_weight, volumes
+
 
 # ---------------------------
 # Search and Main Program Logic

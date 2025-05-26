@@ -1,7 +1,42 @@
-class Customer:
-    def __init__(self, name: str, code: int, block: bool):
-        self.name = name
-        self.code = code
-        self.block = block
-    def __str__(self):
-        return f"Customer(name = "{self.name}", code = {self.code}, block = {self.code})"
+largest = None
+smallest = None
+while True:
+    try:
+        num_str = input("Enter a number or 'done'")
+        if num_str == 'done':
+            break
+
+        num = int(num_str)
+        if largest == None and smallest == None:
+            largest = num
+            smallest = num
+        elif num > largest:
+            largest = num
+        elif num < smallest:
+            smallest = num
+    except ValueError:
+            print("Invalid input")
+
+
+
+print('Maximum is', largest)
+print('Minimum is', smallest)
+
+
+
+
+
+
+
+
+#
+
+#largest = None
+#smallest = None
+#while True:
+    #   num = input("Enter a number: ")
+    #if num == "done":
+    #   break
+    #print(num)
+
+#print("Maximum", largest)
